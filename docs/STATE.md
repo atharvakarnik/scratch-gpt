@@ -1,6 +1,6 @@
 # STATE — authoritative project status
 
-**Current milestone:** M0 (environment check on Mac) → then **A1** (preprocessing + BPE tokenizer)
+**Current milestone:** **A1** (preprocessing + BPE tokenizer). M0 complete.
 **Last updated:** 2026-11-10
 
 ## Hardware (verified, 2026-11-10)
@@ -18,7 +18,7 @@
 
 | ID | Decision | Rationale | Revisit if |
 |---|---|---|---|
-| D1 | PyTorch on MPS, FP32 default | Transfers to later fine-tuning phase; correctness first | measured throughput < ~5k tok/s (consider MLX) |
+| D1 | PyTorch on MPS, FP32 (no mixed precision) | Transfers to fine-tuning phase. M0: FP16 matmul only 1.12× FP32, BF16 0.54× (slower on M2) → AMP not worth its complexity | moving to a newer Apple GPU |
 | D2 | Dataset: TinyStoriesV2-GPT4 (HF `roneneldan/TinyStories`, CDLA-Sharing-1.0) | Narrow domain → coherent text from ~10M-param models; ~550M tokens (est.) | — |
 | D3 | Self-implemented byte-level BPE, vocab 4096 (incl. `<\|endoftext\|>`) | Small embedding/logit cost; core learning exercise | encode throughput blocks A2 |
 | D4 | Baseline arch: GPT-2-style pre-norm (LayerNorm, learned pos-emb, GELU MLP, tied embeddings) | Simple to verify; modern parts become ablations (A8) | — |
@@ -28,8 +28,20 @@
 
 ## Verified results
 
-_None on the Mac yet._ Pending M0: `python scripts/bench_mps.py` (record tok/s, achieved TFLOP/s,
-device memory) and `python scripts/bench_mps.py --duration 600` (thermal throttling).
+### M0 — 2026-11-10, MacBook Air M2 (10-core GPU), torch 2.15.0, MPS, stand-in `base` (12.32 M params, B=32, T=256)
+
+| Metric | Value |
+|---|---|
+| Matmul 2048² FP32 / FP16 / BF16 | 2.89 / 3.24 / 1.56 TFLOP/s |
+| Training throughput, cold (60 steps) | 17.5k tok/s (1.40 TFLOP/s ≈ 48% of FP32 matmul) |
+| Training throughput, 10-min sustained | 13.6k tok/s avg; windows 11.2k–17.9k; last vs first −26.5% (thermal) |
+| Device memory (driver-allocated) | 3.11 GiB |
+| Initial loss | 8.40 (ln 4096 = 8.32) |
+
+Implications: plan on **~12k tok/s sustained → ~45 M tokens/h** for `base`. 1 h first run ≈ 45 M tokens;
+Chinchilla-scale (~250 M tokens) ≈ 5–6 h. `stretch` (~27 M) expected ~2.2× slower → only as an
+undertrained comparison. Memory is not a constraint at B=32. Your hand-written model may be slower
+than the fused stand-in; re-measure in A5.
 
 Scaffold verification (2026-11-10, Linux CPU sandbox, not the Mac):
 - A1 tests validated against a private reference implementation (not in repo); 9 injected bugs all caught.
@@ -38,9 +50,7 @@ Scaffold verification (2026-11-10, Linux CPU sandbox, not the Mac):
 
 ## Planning estimates (not yet verified)
 
-- `base` (~12.3M params): ~80 MFLOP/token training; ~10k tok/s on M2 GPU → ~36M tokens/h.
-- Peak memory (micro-batch 32 × ctx 256, FP32): ~2–3 GB.
-- Fanless thermal throttling: magnitude unknown — measure in long runs.
+- Thermal throttling beyond 10 min (multi-hour runs): unmeasured. Compare runs by tokens seen, not wall time.
 
 ## Open questions
 

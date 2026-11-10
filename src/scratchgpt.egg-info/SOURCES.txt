@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/scratchgpt/__init__.py
+src/scratchgpt/text.py
+src/scratchgpt/tokenizer.py
+src/scratchgpt.egg-info/PKG-INFO
+src/scratchgpt.egg-info/SOURCES.txt
+src/scratchgpt.egg-info/dependency_links.txt
+src/scratchgpt.egg-info/requires.txt
+src/scratchgpt.egg-info/top_level.txt
+tests/test_text.py
+tests/test_tokenizer.py
