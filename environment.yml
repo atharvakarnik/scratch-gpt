@@ -1,0 +1,13 @@
+# Conda/mamba environment: provides Python + pip only.
+# Python packages (torch, numpy, regex, pytest) come from pyproject.toml via pip, so there is
+# a single source of truth for dependencies and torch uses the official PyPI macOS-arm64 (MPS) wheels.
+#
+#   mamba env create -f environment.yml
+#   mamba activate scratch-gpt
+#   pip install -e ".[dev]"
+name: scratch-gpt
+channels:
+  - conda-forge
+dependencies:
+  - python=3.13
+  - pip

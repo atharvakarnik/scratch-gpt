@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scratchgpt"
+version = "0.1.0"
+description = "Educational decoder-only Transformer trained from scratch on Apple Silicon"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.6",
+    "numpy>=1.26",
+    "regex>=2024.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "data: needs the downloaded dataset (skipped if missing)",
+    "slow: takes more than a few seconds",
+]
